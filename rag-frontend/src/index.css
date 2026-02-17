@@ -1,0 +1,147 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #1f2937, #111827);
+  color: white;
+}
+
+.app {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.card {
+  width: 900px;
+  background: #1e1e2f;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #60a5fa;
+}
+.upload-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.upload-box input {
+  background: #2d3748;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+}
+
+.upload-box button {
+  background: #2563eb;
+  border: none;
+  padding: 8px 14px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.upload-message {
+  color: #10b981;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window {
+  background: #111827;
+  height: 400px;
+  overflow-y: auto;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.message {
+  max-width: 75%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.message.user {
+  align-self: flex-end;
+  background: #2563eb;
+  color: white;
+}
+
+.message.bot {
+  align-self: flex-start;
+  background: #374151;
+}
+
+.sources {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+}
+
+.input-area input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #2d3748;
+  color: white;
+}
+
+.input-area button {
+  background: #10b981;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.typing {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.copy-btn {
+  margin-top: 8px;
+  font-size: 12px;
+  background: #374151;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.stop-btn {
+  background: #dc2626;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+}

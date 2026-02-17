@@ -1,0 +1,5 @@
+py -3.12 -m uvicorn backend.main:app --reload
+py -3.12 backend/ingest.py
+ollama list
+ollama server
+npm run dev
