@@ -7,23 +7,26 @@ function ChatBox() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
   const controllerRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus();
+  }, [loading]);
+
   const sendMessage = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || loading) return;
 
+    const userMsg = { type: "user", text: query, id: Date.now() };
+    setMessages((prev) => [...prev, userMsg]);
+    setQuery("");
     setLoading(true);
-
-    const userMessage = { type: "user", text: query };
-    setMessages((prev) => [...prev, userMessage]);
 
     const controller = new AbortController();
     controllerRef.current = controller;
-
-    setQuery("");
 
     try {
       const response = await fetch("http://127.0.0.1:8000/ask", {
@@ -36,76 +39,122 @@ function ChatBox() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      let botMessage = { type: "bot", text: "" };
-
-      setMessages((prev) => [...prev, botMessage]);
+      let botMsg = { type: "bot", text: "", id: Date.now() + 1 };
+      setMessages((prev) => [...prev, botMsg]);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value);
-        botMessage.text += chunk;
+        botMsg.text += chunk;
 
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = { ...botMessage };
+          updated[updated.length - 1] = { ...botMsg };
           return updated;
         });
       }
-    } catch (error) {
-      if (error.name === "AbortError") {
-        console.log("Streaming stopped by user.");
-      } else {
+    } catch (err) {
+      if (err.name !== "AbortError") {
         setMessages((prev) => [
           ...prev,
-          { type: "bot", text: "Error fetching answer" },
+          {
+            type: "bot",
+            text: "Error occurred while getting response",
+            id: Date.now(),
+          },
         ]);
       }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const stopStreaming = () => {
-    if (controllerRef.current) {
-      controllerRef.current.abort();
-      setLoading(false);
-    }
+    controllerRef.current?.abort();
+    setLoading(false);
+  };
+
+  const copyMessage = (text) => {
+    navigator.clipboard.writeText(text);
+    // You can add toast notification here later
   };
 
   return (
     <div className="chat-container">
       <div className="chat-window">
-        {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.type}`}>
+        {messages.length === 0 && (
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "120px",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <h2>Welcome to Smart RAG Assistant</h2>
+            <p>Upload PDFs and start asking questions about them</p>
+          </div>
+        )}
+
+        {messages.map((msg) => (
+          <div key={msg.id} className={`message ${msg.type}`}>
             {msg.type === "bot" ? (
-              <ReactMarkdown>{msg.text}</ReactMarkdown>
+              <ReactMarkdown>{msg.text || " "}</ReactMarkdown>
             ) : (
-              <p>{msg.text}</p>
+              msg.text
+            )}
+
+            {msg.type === "bot" && msg.text && (
+              <button
+                className="copy-btn"
+                onClick={() => copyMessage(msg.text)}
+              >
+                Copy
+              </button>
             )}
           </div>
         ))}
 
-        {loading && <div className="typing">Typing...</div>}
+        {loading && (
+          <div className="message bot" style={{ maxWidth: "180px" }}>
+            Thinking...
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
       <div className="input-area">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask something..."
-          disabled={loading}
-        />
+        <div className="input-wrapper">
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="Ask about your documents..."
+            disabled={loading}
+          />
 
-        {!loading ? (
-          <button onClick={sendMessage}>Send</button>
-        ) : (
-          <button onClick={stopStreaming} className="stop-btn">
-            Stop
-          </button>
-        )}
+          {!loading ? (
+            <button
+              className="btn-send"
+              onClick={sendMessage}
+              disabled={!query.trim()}
+            >
+              Send
+            </button>
+          ) : (
+            <button className="btn-stop" onClick={stopStreaming}>
+              Stop
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
