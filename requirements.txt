@@ -1,8 +1,10 @@
 langchain
 langchain-community
 langchain-openai
+langchain-google-genai
 faiss-cpu
 pypdf
 python-dotenv
 fastapi
 uvicorn
+python-multipart

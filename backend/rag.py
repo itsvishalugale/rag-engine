@@ -1,33 +1,42 @@
+import os
+from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_ollama import OllamaLLM
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+
+load_dotenv()
 
 DB_PATH = "vectorstore/db"
 
 
 def get_rag_chain():
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
-    vectorstore = FAISS.load_local(
-        DB_PATH,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
+    # Auto-initialize placeholder database if it doesn't exist to prevent crash on startup
+    if not os.path.exists(os.path.join(DB_PATH, "index.faiss")):
+        os.makedirs(DB_PATH, exist_ok=True)
+        vectorstore = FAISS.from_texts(
+            ["No documents uploaded yet. Please upload PDF documents to start chatting."],
+            embeddings
+        )
+        vectorstore.save_local(DB_PATH)
+    else:
+        vectorstore = FAISS.load_local(
+            DB_PATH,
+            embeddings,
+            allow_dangerous_deserialization=True
+        )
 
     # 🔥 Base retriever (fast default)
     base_retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
 
     # 🔥 Smart LLM config (balanced)
-    llm = OllamaLLM(
-        model="phi",
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-3.5-flash",
         temperature=0.2,
-        top_p=0.9,
         streaming=True
     )
 
